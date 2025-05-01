@@ -9,7 +9,6 @@
       text-align: center;
       padding: 30px;
       background: #f4f4f4;
-      color: #333;
     }
     h1 { color: #1a73e8; }
     input, button {
@@ -33,17 +32,17 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .hidden { display: none; }
-    a { word-break: break-all; }
+    a { word-break: break-word; }
   </style>
 </head>
 <body>
   <h1>EarnPaisa</h1>
 
-  <div id="setup" class="hidden">
-    <p>Enter a unique username (one time only):</p>
+  <div id="setup">
+    <p>Enter a unique username (only once):</p>
     <input type="text" id="usernameInput" placeholder="Your username" />
     <br>
-    <button onclick="saveUsername()">Start</button>
+    <button onclick="registerUser()">Start</button>
   </div>
 
   <div id="main" class="hidden">
@@ -67,11 +66,16 @@
     const apiKey = "d8f7e47421aae7f9b4641e0c1";
     const domain = "https://gamenter95.github.io/earnpaisa/shortlink.html";
 
-    function saveUsername() {
+    function registerUser() {
       const username = document.getElementById("usernameInput").value.trim();
-      if (!username) return alert("Please enter a username.");
+      if (!username) return alert("Enter a username.");
 
       let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+      if (localStorage.getItem("currentUser")) {
+        alert("This device is already registered.");
+        return;
+      }
 
       if (users[username]) {
         alert("Username already taken.");
@@ -81,42 +85,43 @@
       users[username] = { balance: 0.0, done: 0, completed: [] };
       localStorage.setItem("users", JSON.stringify(users));
       localStorage.setItem("currentUser", username);
-      showMain();
+      loadDashboard();
     }
 
-    function showMain() {
-      const currentUser = localStorage.getItem("currentUser");
-      const users = JSON.parse(localStorage.getItem("users") || "{}");
+    function loadDashboard() {
+      const username = localStorage.getItem("currentUser");
+      if (!username) return; // not registered yet
 
-      if (currentUser && users[currentUser]) {
-        document.getElementById("setup").classList.add("hidden");
-        document.getElementById("main").classList.remove("hidden");
-        document.getElementById("usernameDisplay").innerText = currentUser;
-        document.getElementById("walletBalance").innerText = users[currentUser].balance.toFixed(1);
-        document.getElementById("doneCount").innerText = users[currentUser].done;
-      } else {
-        document.getElementById("setup").classList.remove("hidden");
-        document.getElementById("main").classList.add("hidden");
-      }
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+      const user = users[username];
+
+      if (!user) return;
+
+      // Show dashboard
+      document.getElementById("setup").classList.add("hidden");
+      document.getElementById("main").classList.remove("hidden");
+      document.getElementById("usernameDisplay").innerText = username;
+      document.getElementById("walletBalance").innerText = user.balance.toFixed(1);
+      document.getElementById("doneCount").innerText = user.done;
     }
 
     async function generateShortlink() {
       const randomID = Math.random().toString(36).substring(2, 10);
       const linkURL = `${domain}?id=${randomID}`;
 
-      const response = await fetch("https://api.cuty.io/full", {
+      const res = await fetch("https://api.cuty.io/full", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ api: apiKey, url: linkURL })
       });
 
-      const data = await response.json();
+      const data = await res.json();
       if (data.status === "success") {
         document.getElementById("shortlink").href = data.short;
         document.getElementById("shortlink").innerText = data.short;
         document.getElementById("shortlinkResult").classList.remove("hidden");
       } else {
-        alert("Failed to create shortlink.");
+        alert("Failed to generate link.");
       }
     }
 
@@ -124,8 +129,8 @@
       window.open(document.getElementById("shortlink").href, "_blank");
     }
 
-    // Always show wallet if already registered
-    showMain();
+    // Always check on load
+    window.onload = loadDashboard;
   </script>
 </body>
 </html>
