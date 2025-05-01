@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Shortlink Complete</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; }
+    .message { font-size: 24px; margin-top: 30px; }
+    button { margin-top: 30px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Shortlink Finished</h1>
+  <div id="result" class="message"></div>
+  <button onclick="goHome()">Back to Home</button>
+
+  <script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function goHome() {
+      window.location.href = "https://gamenter95.github.io/earnpaisa/index.html";
+    }
+
+    function rewardUser(id) {
+      const username = localStorage.getItem("currentUser");
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+
+      if (!username || !users[username]) {
+        document.getElementById("result").innerText = "No valid user found.";
+        return;
+      }
+
+      if (users[username].completed?.includes(id)) {
+        document.getElementById("result").innerText = "You've already earned from this link.";
+        return;
+      }
+
+      users[username].balance += 0.5;
+      users[username].done += 1;
+      users[username].completed = users[username].completed || [];
+      users[username].completed.push(id);
+
+      localStorage.setItem("users", JSON.stringify(users));
+      document.getElementById("result").innerText = "You earned ₹0.5 🎉";
+    }
+
+    const shortlinkID = getQueryParam("id");
+    if (shortlinkID) {
+      rewardUser(shortlinkID);
+    } else {
+      document.getElementById("result").innerText = "Invalid shortlink.";
+    }
+  </script>
+</body>
+</html>

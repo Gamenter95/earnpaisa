@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - EarnPaisa</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    h1 { text-align: center; }
+    .user-list { margin-top: 30px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    input[type="number"] { width: 80px; }
+    button { padding: 5px 10px; margin: 0 5px; }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+
+  <div class="user-list">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Balance (₹)</th>
+          <th>Done</th>
+          <th>Change Amount</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    function loadUsers() {
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "";
+
+      Object.keys(users).forEach(username => {
+        const user = users[username];
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${username}</td>
+          <td id="bal-${username}">${user.balance.toFixed(1)}</td>
+          <td>${user.done}</td>
+          <td>
+            <input type="number" id="amount-${username}" value="0" step="0.1">
+          </td>
+          <td>
+            <button onclick="changeBalance('${username}', 'add')">Add</button>
+            <button onclick="changeBalance('${username}', 'sub')">Subtract</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function changeBalance(username, type) {
+      const amount = parseFloat(document.getElementById(`amount-${username}`).value);
+      if (isNaN(amount)) return alert("Enter a valid number");
+
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+      if (!users[username]) return;
+
+      if (type === "add") {
+        users[username].balance += amount;
+      } else {
+        users[username].balance = Math.max(0, users[username].balance - amount);
+      }
+
+      localStorage.setItem("users", JSON.stringify(users));
+      document.getElementById(`bal-${username}`).innerText = users[username].balance.toFixed(1);
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
