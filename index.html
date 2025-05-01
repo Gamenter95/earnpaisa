@@ -40,7 +40,7 @@
   <h1>EarnPaisa</h1>
 
   <div id="setup" class="hidden">
-    <p>Enter a unique username (used once per device):</p>
+    <p>Enter a unique username (one time only):</p>
     <input type="text" id="usernameInput" placeholder="Your username" />
     <br>
     <button onclick="saveUsername()">Start</button>
@@ -72,12 +72,6 @@
       if (!username) return alert("Please enter a username.");
 
       let users = JSON.parse(localStorage.getItem("users") || "{}");
-      const existingUser = localStorage.getItem("currentUser");
-
-      if (existingUser) {
-        alert("This device already has a registered user.");
-        return;
-      }
 
       if (users[username]) {
         alert("Username already taken.");
@@ -130,6 +124,7 @@
       window.open(document.getElementById("shortlink").href, "_blank");
     }
 
+    // Always show wallet if already registered
     showMain();
   </script>
 </body>
