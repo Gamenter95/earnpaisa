@@ -1,86 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>EarnPaisa - Shortlink Generator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cuty.io Shortlink Generator</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      text-align: center;
-      padding: 40px 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
-    h1 {
-      color: #222;
-      margin-bottom: 20px;
+    .container {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
     button {
-      background: #28a745;
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 8px;
+      font-size: 1rem;
+      border-radius: 6px;
       cursor: pointer;
-      margin-top: 10px;
     }
     button:hover {
-      background: #218838;
+      background-color: #45a049;
     }
-    #linkBox {
-      margin-top: 30px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      display: none;
-    }
-    a {
-      font-size: 17px;
-      color: #007bff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
+    .result {
+      margin-top: 15px;
+      word-break: break-word;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <h1>EarnPaisa Shortlink Generator</h1>
-  <button onclick="generateShortlink()">Generate Shortlink</button>
-
-  <div id="linkBox">
-    <p><strong>Shortlink:</strong></p>
-    <a id="shortlink" href="#" target="_blank">Loading...</a>
+  <div class="container">
+    <h2>Shorten Your Link</h2>
+    <input type="text" id="longUrl" placeholder="Enter your URL here">
+    <button onclick="generateShortlink()">Shorten</button>
+    <div class="result" id="result"></div>
   </div>
 
   <script>
     async function generateShortlink() {
-      const randomId = Math.random().toString(36).substring(2, 10);
-      const destinationUrl = encodeURIComponent(`https://yourusername.github.io/earnpaisa/verify/${randomId}`);
-      const apiKey = "d8f7e47421aae7f9b4641e0c16019418022a5065";
-      const alias = `ep${Date.now()}`;
+      const input = document.getElementById("longUrl");
+      const result = document.getElementById("result");
+      const url = encodeURIComponent(input.value.trim());
 
-      const apiUrl = `https://cuty.io/api?api=${apiKey}&url=${destinationUrl}&alias=${alias}`;
+      if (!url) {
+        result.textContent = "Please enter a valid URL.";
+        return;
+      }
+
+      const apiKey = "d8f7e47421aae7f9b4641e0c16019418022a5065";
+      const apiUrl = `https://cuty.io/api?api=${apiKey}&url=${url}`;
 
       try {
+        result.textContent = "Processing...";
         const response = await fetch(apiUrl);
-        const shortUrl = await response.text();
+        const data = await response.json();
 
-        if (shortUrl.startsWith("https://cuty.io")) {
-          const linkEl = document.getElementById("shortlink");
-          linkEl.href = shortUrl;
-          linkEl.innerText = shortUrl;
-          document.getElementById("linkBox").style.display = "block";
+        if (data.status === "success") {
+          result.innerHTML = `Short URL: <a href="${data.shortenedUrl}" target="_blank">${data.shortenedUrl}</a>`;
         } else {
-          alert("Cuty.io error: " + shortUrl);
-          console.error("Response:", shortUrl);
+          result.textContent = "Error: " + data.message;
         }
-      } catch (err) {
-        alert("Failed to generate shortlink.");
-        console.error(err);
+      } catch (error) {
+        result.textContent = "An error occurred. Please try again.";
+        console.error(error);
       }
     }
   </script>
