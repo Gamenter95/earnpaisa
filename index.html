@@ -1,136 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EarnPaisa</title>
+  <title>EarnPaisa - Shortlink Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
       text-align: center;
-      padding: 30px;
-      background: #f4f4f4;
+      padding: 40px 20px;
     }
-    h1 { color: #1a73e8; }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    h1 {
+      color: #222;
+      margin-bottom: 20px;
     }
     button {
-      background-color: #1a73e8;
+      background: #28a745;
       color: white;
       border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
     }
-    .wallet, .shortlink-area {
-      background: #fff;
-      margin: 20px auto;
+    button:hover {
+      background: #218838;
+    }
+    #linkBox {
+      margin-top: 30px;
+      background: white;
       padding: 20px;
-      max-width: 400px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: none;
     }
-    .hidden { display: none; }
-    a { word-break: break-word; }
+    a {
+      font-size: 17px;
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <h1>EarnPaisa</h1>
 
-  <div id="setup">
-    <p>Enter a unique username (only once):</p>
-    <input type="text" id="usernameInput" placeholder="Your username" />
-    <br>
-    <button onclick="registerUser()">Start</button>
-  </div>
+  <h1>EarnPaisa Shortlink Generator</h1>
+  <button onclick="generateShortlink()">Generate Shortlink</button>
 
-  <div id="main" class="hidden">
-    <div class="wallet">
-      <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
-      <p><strong>Wallet:</strong> ₹<span id="walletBalance">0.0</span></p>
-      <p><strong>Done:</strong> <span id="doneCount">0</span></p>
-    </div>
-
-    <div class="shortlink-area">
-      <h3>Shortlink Generator</h3>
-      <button onclick="generateShortlink()">Generate Shortlink</button>
-      <div id="shortlinkResult" class="hidden">
-        <p>Shortlink: <a id="shortlink" target="_blank"></a></p>
-        <button onclick="openShortlink()">Open Link</button>
-      </div>
-    </div>
+  <div id="linkBox">
+    <p><strong>Shortlink:</strong></p>
+    <a id="shortlink" href="#" target="_blank">Loading...</a>
   </div>
 
   <script>
-    const apiKey = "d8f7e47421aae7f9b4641e0c1";
-    const domain = "https://gamenter95.github.io/earnpaisa/shortlink.html";
-
-    function registerUser() {
-      const username = document.getElementById("usernameInput").value.trim();
-      if (!username) return alert("Enter a username.");
-
-      let users = JSON.parse(localStorage.getItem("users") || "{}");
-
-      if (localStorage.getItem("currentUser")) {
-        alert("This device is already registered.");
-        return;
-      }
-
-      if (users[username]) {
-        alert("Username already taken.");
-        return;
-      }
-
-      users[username] = { balance: 0.0, done: 0, completed: [] };
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("currentUser", username);
-      loadDashboard();
-    }
-
-    function loadDashboard() {
-      const username = localStorage.getItem("currentUser");
-      if (!username) return; // not registered yet
-
-      const users = JSON.parse(localStorage.getItem("users") || "{}");
-      const user = users[username];
-
-      if (!user) return;
-
-      // Show dashboard
-      document.getElementById("setup").classList.add("hidden");
-      document.getElementById("main").classList.remove("hidden");
-      document.getElementById("usernameDisplay").innerText = username;
-      document.getElementById("walletBalance").innerText = user.balance.toFixed(1);
-      document.getElementById("doneCount").innerText = user.done;
-    }
-
     async function generateShortlink() {
-      const randomID = Math.random().toString(36).substring(2, 10);
-      const linkURL = `${domain}?id=${randomID}`;
+      const randomId = Math.random().toString(36).substring(2, 10);
+      const destinationUrl = encodeURIComponent(`https://yourusername.github.io/earnpaisa/verify/${randomId}`);
+      const apiKey = "d8f7e47421aae7f9b4641e0c16019418022a5065";
+      const alias = `ep${Date.now()}`;
 
-      const res = await fetch("https://api.cuty.io/full", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api: apiKey, url: linkURL })
-      });
+      const apiUrl = `https://cuty.io/api?api=${apiKey}&url=${destinationUrl}&alias=${alias}`;
 
-      const data = await res.json();
-      if (data.status === "success") {
-        document.getElementById("shortlink").href = data.short;
-        document.getElementById("shortlink").innerText = data.short;
-        document.getElementById("shortlinkResult").classList.remove("hidden");
-      } else {
-        alert("Failed to generate link.");
+      try {
+        const response = await fetch(apiUrl);
+        const shortUrl = await response.text();
+
+        if (shortUrl.startsWith("https://cuty.io")) {
+          const linkEl = document.getElementById("shortlink");
+          linkEl.href = shortUrl;
+          linkEl.innerText = shortUrl;
+          document.getElementById("linkBox").style.display = "block";
+        } else {
+          alert("Cuty.io error: " + shortUrl);
+          console.error("Response:", shortUrl);
+        }
+      } catch (err) {
+        alert("Failed to generate shortlink.");
+        console.error(err);
       }
     }
-
-    function openShortlink() {
-      window.open(document.getElementById("shortlink").href, "_blank");
-    }
-
-    // Always check on load
-    window.onload = loadDashboard;
   </script>
+
 </body>
 </html>
